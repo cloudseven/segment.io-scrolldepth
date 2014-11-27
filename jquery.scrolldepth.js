@@ -1,4 +1,4 @@
-;(function ( $, window, document, undefined ) {
+;(function () {
 
     "use strict";
 
@@ -12,22 +12,21 @@
     };
 
 
-    var $window = $(window),
-        cache = [],
+    var cache = [],
         lastPixelDepth = 0;
 
     /*
      * Plugin
      */
 
-    $.scrollDepth = function(options) {
+    window.scrollDepth = function(options) {
 
         var startTime = +new Date;
 
-        options = $.extend({}, defaults, options);
+        options = options || defaults;
 
         // Return early if document height is too small
-        if ( $(document).height() < options.minHeight ) {
+        if ( document.body.clientHeight < options.minHeight ) {
             return;
         }
 
@@ -43,8 +42,7 @@
          */
 
         function sendEvent(action, label, scrollDistance, timing) {
-            console.log(action,label,scrollDistance,timing);
-            analytics.track(action,{
+            analytics.track(document.location.pathname, {
                 depth: label
             });
         }
@@ -61,8 +59,8 @@
 
         function checkMarks(marks, scrollDistance, timing) {
             // Check each active mark
-            $.each(marks, function(key, val) {
-                if ( $.inArray(key, cache) === -1 && scrollDistance >= val ) {
+            forEach(marks, function(key, val) {
+                if ( cache.indexOf(key) === -1 && scrollDistance >= val ) {
                     sendEvent('Percentage', key, scrollDistance, timing);
                     cache.push(key);
                 }
@@ -70,14 +68,22 @@
         }
 
         function checkElements(elements, scrollDistance, timing) {
-            $.each(elements, function(index, elem) {
-                if ( $.inArray(elem, cache) === -1 && $(elem).length ) {
-                    if ( scrollDistance >= $(elem).offset().top ) {
+            elements.forEach(function(index, elem) {
+                if ( elem.indexOf(cache) === -1 && elem.length ) {
+                    if ( scrollDistance >= offset(elem).top ) {
                         sendEvent('Elements', elem, scrollDistance, timing);
                         cache.push(elem);
                     }
                 }
             });
+        }
+
+        function offSet(elem){
+            var rect = elem.getBoundingClientRect();
+            return {
+                top: rect.top + document.body.scrollTop,
+                left: rect.left + document.body.scrollLeft
+            }
         }
 
         function rounded(scrollDistance) {
@@ -120,19 +126,34 @@
             };
         }
 
+        var forEach = function(obj, callback) {
+            if (obj == null) return obj;
+            var i, length = obj.length;
+            if (length === +length) {
+                for (i = 0; i < length; i++) {
+                    callback(obj[i], i, obj);
+                }
+            } else {
+                for (var key in obj){
+                    callback(key, obj[key]);
+                }
+            }
+            return obj;
+        };
+
         /*
          * Scroll Event
          */
 
-        $window.on('scroll.scrollDepth', throttle(function() {
+        var scrollDepth = throttle(function() {
             /*
              * We calculate document and window height on each scroll event to
              * account for dynamic DOM changes.
              */
 
-            var docHeight = $(document).height(),
-                winHeight = window.innerHeight ? window.innerHeight : $window.height(),
-                scrollDistance = $window.scrollTop() + winHeight,
+            var docHeight = document.body.clientHeight,
+                winHeight = window.innerHeight ? window.innerHeight : window.screen.height,
+                scrollDistance = document.querySelector('body').scrollTop + winHeight,
 
             // Recalculate percentage marks
                 marks = calculateMarks(docHeight),
@@ -142,7 +163,7 @@
 
             // If all marks already hit, unbind scroll event
             if (cache.length >= 4 + options.elements.length) {
-                $window.off('scroll.scrollDepth');
+                window.removeEventListener('scroll', scrollDepth);
                 return;
             }
 
@@ -155,8 +176,9 @@
             if (options.percentage) {
                 checkMarks(marks, scrollDistance, timing);
             }
-        }, 500));
+        }, 500);
 
+        window.addEventListener('scroll', scrollDepth);
     };
 
-})( jQuery, window, document );
+})();
