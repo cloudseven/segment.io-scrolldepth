@@ -11,8 +11,7 @@
         nonInteraction: true
     };
 
-    var cache = [],
-        lastPixelDepth = 0;
+    var cache = [];
 
     /*
      * Plugin
