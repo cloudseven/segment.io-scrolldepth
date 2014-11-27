@@ -23,19 +23,11 @@
         return;
     }
 
-    if (options.percentage) {
-        // Establish baseline (0% scroll)
-        sendEvent('Percentage', 'Baseline');
-    } else if (options.elements) {
-        sendEvent('Elements', 'Baseline');
-    }
-
     /*
      * Functions
      */
 
-    function sendEvent(action, label, scrollDistance, timing) {
-        console.log(action, label, scrollDistance, timing);
+    function sendEvent(label) {
         analytics.track(document.location.pathname, {
             exposed: label
         });
@@ -55,7 +47,7 @@
         // Check each active mark
         for (var key in marks) {
             if (cache.indexOf(key) === -1 && scrollDistance >= marks[key]) {
-                sendEvent('Percentage', key, scrollDistance, timing);
+                sendEvent(key);
                 cache.push(key);
             }
         }
@@ -66,7 +58,7 @@
             if ( cache.indexOf(elem) === -1 && cache.length ) {
                 if ( scrollDistance >= offSet(elem).top ) {
                     var label = elem.id || elem.classList;
-                    sendEvent('Elements', label, scrollDistance, timing);
+                    sendEvent(label);
                     cache.push(elem);
                 }
             }
