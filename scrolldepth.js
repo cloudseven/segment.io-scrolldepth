@@ -16,7 +16,6 @@
     /*
      * Plugin
      */
-    var startTime = +new Date;
 
     // Return early if document height is too small
     if ( document.body.clientHeight < options.minHeight ) {
@@ -43,7 +42,7 @@
         };
     }
 
-    function checkMarks(marks, scrollDistance, timing) {
+    function checkMarks(marks, scrollDistance) {
         // Check each active mark
         for (var key in marks) {
             if (cache.indexOf(key) === -1 && scrollDistance >= marks[key]) {
@@ -53,11 +52,12 @@
         }
     }
 
-    function checkElements(elements, scrollDistance, timing) {
+    function checkElements(elements, scrollDistance) {
         [].forEach.call(elements, function(elem){
             if ( cache.indexOf(elem) === -1 && cache.length ) {
                 if ( scrollDistance >= offSet(elem).top ) {
-                    var label = elem.id || elem.classList;
+                    var label = elem.id || elem.classList.toString() || elem.nodeName;
+                    console.log(label);
                     sendEvent(label);
                     cache.push(elem);
                 }
@@ -125,10 +125,7 @@
             scrollDistance = document.querySelector('body').scrollTop + winHeight,
 
         // Recalculate percentage marks
-            marks = calculateMarks(docHeight),
-
-        // Timing
-            timing = +new Date - startTime;
+            marks = calculateMarks(docHeight);
 
         // If all marks already hit, unbind scroll event
         if (cache.length >= 4 + options.elements.length) {
@@ -138,12 +135,12 @@
 
         // Check specified DOM elements
         if (options.elements) {
-            checkElements(options.elements, scrollDistance, timing);
+            checkElements(options.elements, scrollDistance);
         }
 
         // Check standard marks
         if (options.percentage) {
-            checkMarks(marks, scrollDistance, timing);
+            checkMarks(marks, scrollDistance);
         }
     }, 500);
 
